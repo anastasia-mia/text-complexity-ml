@@ -30,7 +30,6 @@ def avg_word_len(doc) -> float:
 
 def type_token_ratio_lemma(doc) -> float:
     lemmas = [t.lemma_.lower() for t in _alpha_tokens(doc)]
-    print(lemmas)
     if not lemmas:
         return 0.0
     return len(set(lemmas)) / len(lemmas)
