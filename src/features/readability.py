@@ -11,6 +11,8 @@ def extract_readability(text: str) -> Dict[str, float]:
             "read_dale_chall": 0.0
         }
 
+    textstat.set_lang("en")
+
     res = {
         "read_flesch": textstat.flesch_reading_ease(text),
         "read_fkgl": textstat.flesch_kincaid_grade(text),

@@ -1,0 +1,156 @@
+from typing import Dict
+from spacy.tokens import Doc
+
+CONTENT_POS = {"NOUN", "VERB", "ADJ", "ADV", "PROPN"}
+FUNCTION_POS = {"ADP", "AUX", "CCONJ", "DET", "PART", "PRON", "SCONJ"}
+
+def _alpha_tokens(doc: Doc):
+    return [t for t in doc if t.is_alpha]
+
+def _share_by_pos(doc: Doc, pos_set) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    pos_count = sum(1 for t in words if t.pos_ in pos_set)
+    return round(pos_count / len(words), 2)
+
+def _verb_heads(doc: Doc):
+    return [t for t in doc if t.pos_ == "VERB"]
+
+def _aux_children(verb):
+    return [c for c in verb.children if c.dep_ in {"aux", "auxpass"}]
+
+def morph_share_nouns(doc: Doc) -> float:
+    return _share_by_pos(doc, {"NOUN"})
+
+def morph_share_verbs(doc: Doc) -> float:
+    return _share_by_pos(doc, {"VERB"})
+
+def morph_share_adj(doc: Doc) -> float:
+    return _share_by_pos(doc, {"ADJ"})
+
+def morph_share_adv(doc: Doc) -> float:
+    return _share_by_pos(doc, {"ADV"})
+
+def morph_share_pronouns(doc: Doc) -> float:
+    return _share_by_pos(doc, {"PRON"})
+
+def morph_share_propn(doc: Doc) -> float:
+    return _share_by_pos(doc, {"PROPN"})
+
+def morph_share_aux(doc: Doc) -> float:
+    return _share_by_pos(doc, {"AUX"})
+
+def morph_share_modals(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    modal_count = sum(1 for t in words if t.tag_ == "MD")
+    return round(modal_count / len(words), 2)
+
+def morph_tense_past_share(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    past_count = 0
+    for t in words:
+        if t.pos_ in {"VERB", "AUX"} and "Past" in t.morph.get("Tense"):
+            past_count += 1
+    return round(past_count / len(words), 2)
+
+def morph_tense_present_share(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    pres_count = 0
+    for t in words:
+        if t.pos_ in {"VERB", "AUX"} and "Pres" in t.morph.get("Tense"):
+            pres_count += 1
+    return round(pres_count / len(words), 2)
+
+def morph_share_perfect(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    perfect_count = 0
+    for v in _verb_heads(doc):
+        auxs = _aux_children(v)
+        has_have = any(a.lemma_ == "have" for a in auxs)
+        has_be = any(a.lemma_ == "be" for a in auxs)
+        is_vbn = (v.tag_ == "VBN")
+        is_perfect_prog = has_have and has_be and (v.tag_ == "VBG")
+        if has_have and is_vbn and not is_perfect_prog:
+            perfect_count += 1
+    return round(perfect_count / len(words), 2)
+
+def morph_share_progressive(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    cnt = 0
+    for v in _verb_heads(doc):
+        auxs = _aux_children(v)
+        has_be = any(a.lemma_ == "be" for a in auxs)
+        has_have = any(a.lemma_ == "have" for a in auxs)
+        if has_be and (v.tag_ == "VBG") and not has_have:
+            cnt += 1
+    return round(cnt / len(words), 2)
+
+def morph_share_perfect_progressive(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    cnt = 0
+    for v in _verb_heads(doc):
+        auxs = _aux_children(v)
+        has_have = any(a.lemma_ == "have" for a in auxs)
+        has_be = any(a.lemma_ == "be" for a in auxs)
+        if has_have and has_be and (v.tag_ == "VBG"):
+            cnt += 1
+    return round(cnt / len(words), 2)
+
+def morph_share_future(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    cnt = 0
+    for v in _verb_heads(doc):
+        auxs = _aux_children(v)
+        has_modal_future = any((a.tag_ == "MD" and a.lemma_ in {"will", "shall", "wo"}) for a in auxs)
+        if has_modal_future:
+            cnt += 1
+    return round(cnt / len(words), 2)
+
+def morph_content_function_ratio(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    content = sum(1 for t in words if t.pos_ in CONTENT_POS)
+    function = sum(1 for t in words if t.pos_ in FUNCTION_POS)
+    if function == 0:
+        return round(float(content), 2)
+    return round(content / function, 2)
+
+def extract_morph(doc: Doc) -> Dict[str, float]:
+    metrics = {
+        "morph_share_nouns": morph_share_nouns(doc),
+        "morph_share_verbs": morph_share_verbs(doc),
+        "morph_share_adj": morph_share_adj(doc),
+        "morph_share_adv": morph_share_adv(doc),
+        "morph_share_pronouns": morph_share_pronouns(doc),
+        "morph_share_propn": morph_share_propn(doc),
+        "morph_share_aux": morph_share_aux(doc),
+        "morph_share_modals": morph_share_modals(doc),
+        "morph_tense_past_share": morph_tense_past_share(doc),
+        "morph_tense_present_share": morph_tense_present_share(doc),
+        "morph_share_perfect": morph_share_perfect(doc),
+        "morph_share_progressive": morph_share_progressive(doc),
+        "morph_share_perfect_progressive": morph_share_perfect_progressive(doc),
+        "morph_share_future": morph_share_future(doc),
+        "morph_content_function_ratio": morph_content_function_ratio(doc),
+    }
+    return {k: round(v, 2) for k, v in metrics.items()}
+
+
+
+
