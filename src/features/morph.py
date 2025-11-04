@@ -1,8 +1,12 @@
 from typing import Dict
 from spacy.tokens import Doc
+import os
+from pathlib import Path
 
 CONTENT_POS = {"NOUN", "VERB", "ADJ", "ADV", "PROPN"}
 FUNCTION_POS = {"ADP", "AUX", "CCONJ", "DET", "PART", "PRON", "SCONJ"}
+
+AFFIX_FILE = Path(__file__).resolve().parents[2] / "assets" / "affixes.txt"
 
 def _alpha_tokens(doc: Doc):
     return [t for t in doc if t.is_alpha]
@@ -131,6 +135,56 @@ def morph_content_function_ratio(doc: Doc) -> float:
         return round(float(content), 2)
     return round(content / function, 2)
 
+def load_affixes():
+    prefixes = []
+    suffixes = []
+    with open(AFFIX_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.endswith("-"):
+                prefixes.append(line[:-1])
+            elif line.startswith("-"):
+                suffixes.append(line[1:])
+    return prefixes, suffixes
+
+PREFIXES, SUFFIXES = load_affixes()
+
+def count_morphemes(token) -> int:
+    lemma = token.lemma_.lower()
+    morph_count = 1
+
+    for pref in PREFIXES:
+        if lemma.startswith(pref) and len(lemma) > len(pref) + 2:
+            morph_count += 1
+            break
+
+    for suf in SUFFIXES:
+        if lemma.endswith(suf) and len(lemma) > len(suf) + 2:
+            morph_count += 1
+            break
+
+    morph = token.morph
+
+    if morph.get("Tense") or morph.get("VerbForm") or morph.get("Aspect"):
+        morph_count += 1
+
+    if "Number=Plur" in morph:
+        morph_count += 1
+
+    if "Degree=Cmp" in morph or "Degree=Sup" in morph:
+        morph_count += 1
+
+    return morph_count
+
+def morph_avg_morphemes_per_word(doc: Doc) -> float:
+    words = _alpha_tokens(doc)
+    if not words:
+        return 0.0
+    counts = [count_morphemes(t) for t in words]
+    return round(sum(counts) / len(counts), 2)
+
 def extract_morph(doc: Doc) -> Dict[str, float]:
     metrics = {
         "morph_share_nouns": morph_share_nouns(doc),
@@ -148,6 +202,7 @@ def extract_morph(doc: Doc) -> Dict[str, float]:
         "morph_share_perfect_progressive": morph_share_perfect_progressive(doc),
         "morph_share_future": morph_share_future(doc),
         "morph_content_function_ratio": morph_content_function_ratio(doc),
+        "morph_avg_morphemes_per_word": morph_avg_morphemes_per_word(doc),
     }
     return {k: round(v, 2) for k, v in metrics.items()}
 
