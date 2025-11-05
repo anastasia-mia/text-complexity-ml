@@ -21,4 +21,4 @@ def extract_readability(text: str) -> Dict[str, float]:
         "read_dale_chall": textstat.dale_chall_readability_score(text)
     }
 
-    return {k: round(float(v), 2) for k, v in res.items()}
+    return {k: round(float(v), 3) for k, v in res.items()}

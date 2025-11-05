@@ -25,9 +25,9 @@ def sem_zipf_stats(doc: Doc) -> Dict[str, float]:
     very_rare = sum(1 for v in vals if v < 3.0)
     n = len(vals)
     return {
-        "sem_mean_zipf": round(float(mean(vals)), 2),
-        "sem_share_rare_zipf_lt_4": round(rare / n, 2),
-        "sem_share_very_rare_zipf_lt_3": round(very_rare / n, 2),
+        "sem_mean_zipf": round(float(mean(vals)), 3),
+        "sem_share_rare_zipf_lt_4": round(rare / n, 3),
+        "sem_share_very_rare_zipf_lt_3": round(very_rare / n, 3),
     }
 
 def _lemma_synset_count(token) -> int:
@@ -46,7 +46,7 @@ def sem_avg_polysemy(doc: Doc) -> float:
     if not toks or wn is None:
         return 0.0
     counts = [ _lemma_synset_count(t) for t in toks ]
-    return round(float(mean(counts)) if counts else 0.0, 2)
+    return round(float(mean(counts)) if counts else 0.0, 3)
 
 def _max_hypernym_depth(token) -> int:
     if wn is None:
@@ -74,7 +74,7 @@ def sem_avg_hypernym_depth(doc: Doc) -> float:
     if not toks or wn is None:
         return 0.0
     vals = [_max_hypernym_depth(t) for t in toks]
-    return round(float(mean(vals)) if vals else 0.0, 2)
+    return round(float(mean(vals)) if vals else 0.0, 3)
 
 def _sent_vectors(doc: Doc) -> List:
     vecs = []
@@ -103,9 +103,9 @@ def sem_sentence_coherence(doc: Doc) -> Dict[str, float]:
     for i in range(len(vecs)-1):
         sims.append(_cosine(vecs[i], vecs[i+1]))
     return {
-        "sem_avg_sent_sim": round(float(mean(sims)), 2),
-        "sem_min_sent_sim": round(float(min(sims)), 2),
-        "sem_std_sent_sim": round(float(pstdev(sims)) if len(sims) > 1 else 0.0, 2),
+        "sem_avg_sent_sim": round(float(mean(sims)), 3),
+        "sem_min_sent_sim": round(float(min(sims)), 3),
+        "sem_std_sent_sim": round(float(pstdev(sims)) if len(sims) > 1 else 0.0, 3),
     }
 
 def sem_word_vector_dispersion(doc: Doc) -> float:
@@ -125,7 +125,7 @@ def sem_word_vector_dispersion(doc: Doc) -> float:
     sims = [cos_sim(t.vector, centroid) for t in toks]
 
     dists = [1.0 - s for s in sims]
-    return round(float(mean(dists)), 2)
+    return round(float(mean(dists)), 3)
 
 def extract_semantics(doc: Doc) -> Dict[str, float]:
     res = {}

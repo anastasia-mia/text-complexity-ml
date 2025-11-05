@@ -6,28 +6,28 @@ def avg_sentence_length(doc: Doc) -> float:
     if sentences == 0:
         return 0.0
     length = [len([t for t in s if t.is_alpha]) for s in sentences]
-    return round(sum(length) / len(length), 2)
+    return round(sum(length) / len(length), 3)
 
 def avg_clause_per_sentence(doc: Doc) -> float:
     sentences = list(doc.sents)
     if sentences == 0:
         return 0.0
     clauses = [sum(1 for t in s if t.pos_ in ("VERB", "AUX")) for s in sentences]
-    return round(sum(clauses) / len(clauses), 2)
+    return round(sum(clauses) / len(clauses), 3)
 
 def share_complex_sentences(doc: Doc) -> float:
     sentences = list(doc.sents)
     if sentences == 0:
         return 0.0
     complex_sentences_count = sum(1 for s in sentences if sum(1 for t in s if t.pos_ in ("VERB", "AUX")) > 1)
-    return round(complex_sentences_count / len(sentences), 2)
+    return round(complex_sentences_count / len(sentences), 3)
 
 def share_passive_sentences(doc: Doc) -> float:
     sentences = list(doc.sents)
     if sentences == 0:
         return 0.0
     passive_sentences_count = sum(1 for s in sentences if any(t.dep_ == "auxpass" for t in s))
-    return round(passive_sentences_count / len(sentences), 2)
+    return round(passive_sentences_count / len(sentences), 3)
 
 def avg_dependency_depth(doc: Doc) -> float:
     sentences = list(doc.sents)
@@ -44,7 +44,7 @@ def avg_dependency_depth(doc: Doc) -> float:
         roots = [t for t in s if t.head == t]
         if roots:
             depths.append(max(depth(r) for r in roots))
-    return round(sum(depths) / len(depths), 2) if depths else 0.0
+    return round(sum(depths) / len(depths), 3) if depths else 0.0
 
 def share_subordinate_conjunctions(doc: Doc) -> float:
     sub_conjs = {
@@ -53,7 +53,7 @@ def share_subordinate_conjunctions(doc: Doc) -> float:
     }
     tokens = [t.text.lower() for t in doc if t.is_alpha]
     sub_conjs_count = sum(1 for t in tokens if t in sub_conjs)
-    return round(sub_conjs_count / len(tokens), 2) if tokens else 0.0
+    return round(sub_conjs_count / len(tokens), 3) if tokens else 0.0
 
 def avg_coord_per_sentence(doc: Doc) -> float:
     sentences = list(doc.sents)
@@ -62,7 +62,7 @@ def avg_coord_per_sentence(doc: Doc) -> float:
     coord_counts = [
         sum(1 for t in s if t.dep_ in {"cc", "conj"}) for s in sentences
     ]
-    return round(sum(coord_counts) / len(coord_counts), 2)
+    return round(sum(coord_counts) / len(coord_counts), 3)
 
 def extract_syntax(doc: Doc) -> Dict[str, float]:
     return {

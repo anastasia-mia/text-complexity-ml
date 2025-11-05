@@ -90,4 +90,4 @@ def extract_lexical(doc) -> Dict[str, float]:
         "lex_share_awl": share_awl(doc),
         "lex_avg_syll_per_word": avg_syllables_per_word(doc),
     }
-    return {k: round(v, 2) for k, v in metrics.items()}
+    return {k: round(v, 3) for k, v in metrics.items()}

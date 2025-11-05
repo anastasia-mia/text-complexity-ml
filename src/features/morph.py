@@ -16,7 +16,7 @@ def _share_by_pos(doc: Doc, pos_set) -> float:
     if not words:
         return 0.0
     pos_count = sum(1 for t in words if t.pos_ in pos_set)
-    return round(pos_count / len(words), 2)
+    return round(pos_count / len(words), 3)
 
 def _verb_heads(doc: Doc):
     return [t for t in doc if t.pos_ == "VERB"]
@@ -50,7 +50,7 @@ def morph_share_modals(doc: Doc) -> float:
     if not words:
         return 0.0
     modal_count = sum(1 for t in words if t.tag_ == "MD")
-    return round(modal_count / len(words), 2)
+    return round(modal_count / len(words), 3)
 
 def morph_tense_past_share(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -60,7 +60,7 @@ def morph_tense_past_share(doc: Doc) -> float:
     for t in words:
         if t.pos_ in {"VERB", "AUX"} and "Past" in t.morph.get("Tense"):
             past_count += 1
-    return round(past_count / len(words), 2)
+    return round(past_count / len(words), 3)
 
 def morph_tense_present_share(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -70,7 +70,7 @@ def morph_tense_present_share(doc: Doc) -> float:
     for t in words:
         if t.pos_ in {"VERB", "AUX"} and "Pres" in t.morph.get("Tense"):
             pres_count += 1
-    return round(pres_count / len(words), 2)
+    return round(pres_count / len(words), 3)
 
 def morph_share_perfect(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -85,7 +85,7 @@ def morph_share_perfect(doc: Doc) -> float:
         is_perfect_prog = has_have and has_be and (v.tag_ == "VBG")
         if has_have and is_vbn and not is_perfect_prog:
             perfect_count += 1
-    return round(perfect_count / len(words), 2)
+    return round(perfect_count / len(words), 3)
 
 def morph_share_progressive(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -98,7 +98,7 @@ def morph_share_progressive(doc: Doc) -> float:
         has_have = any(a.lemma_ == "have" for a in auxs)
         if has_be and (v.tag_ == "VBG") and not has_have:
             cnt += 1
-    return round(cnt / len(words), 2)
+    return round(cnt / len(words), 3)
 
 def morph_share_perfect_progressive(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -111,7 +111,7 @@ def morph_share_perfect_progressive(doc: Doc) -> float:
         has_be = any(a.lemma_ == "be" for a in auxs)
         if has_have and has_be and (v.tag_ == "VBG"):
             cnt += 1
-    return round(cnt / len(words), 2)
+    return round(cnt / len(words), 3)
 
 def morph_share_future(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -123,7 +123,7 @@ def morph_share_future(doc: Doc) -> float:
         has_modal_future = any((a.tag_ == "MD" and a.lemma_ in {"will", "shall", "wo"}) for a in auxs)
         if has_modal_future:
             cnt += 1
-    return round(cnt / len(words), 2)
+    return round(cnt / len(words), 3)
 
 def morph_content_function_ratio(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -132,8 +132,8 @@ def morph_content_function_ratio(doc: Doc) -> float:
     content = sum(1 for t in words if t.pos_ in CONTENT_POS)
     function = sum(1 for t in words if t.pos_ in FUNCTION_POS)
     if function == 0:
-        return round(float(content), 2)
-    return round(content / function, 2)
+        return round(float(content), 3)
+    return round(content / function, 3)
 
 def load_affixes():
     prefixes = []
@@ -151,7 +151,7 @@ def load_affixes():
 
 PREFIXES, SUFFIXES = load_affixes()
 
-def count_morphemes(token) -> int:
+def _count_morphemes(token) -> int:
     lemma = token.lemma_.lower()
     morph_count = 1
 
@@ -182,8 +182,8 @@ def morph_avg_morphemes_per_word(doc: Doc) -> float:
     words = _alpha_tokens(doc)
     if not words:
         return 0.0
-    counts = [count_morphemes(t) for t in words]
-    return round(sum(counts) / len(counts), 2)
+    counts = [_count_morphemes(t) for t in words]
+    return round(sum(counts) / len(counts), 3)
 
 def extract_morph(doc: Doc) -> Dict[str, float]:
     metrics = {
@@ -204,7 +204,7 @@ def extract_morph(doc: Doc) -> Dict[str, float]:
         "morph_content_function_ratio": morph_content_function_ratio(doc),
         "morph_avg_morphemes_per_word": morph_avg_morphemes_per_word(doc),
     }
-    return {k: round(v, 2) for k, v in metrics.items()}
+    return {k: round(v, 3) for k, v in metrics.items()}
 
 
 
