@@ -1,6 +1,6 @@
 from typing import Dict
 from spacy.tokens import Doc
-import os
+from functools import lru_cache
 from pathlib import Path
 
 CONTENT_POS = {"NOUN", "VERB", "ADJ", "ADV", "PROPN"}
@@ -16,7 +16,7 @@ def _share_by_pos(doc: Doc, pos_set) -> float:
     if not words:
         return 0.0
     pos_count = sum(1 for t in words if t.pos_ in pos_set)
-    return round(pos_count / len(words), 3)
+    return pos_count / len(words)
 
 def _verb_heads(doc: Doc):
     return [t for t in doc if t.pos_ == "VERB"]
@@ -46,84 +46,93 @@ def morph_share_aux(doc: Doc) -> float:
     return _share_by_pos(doc, {"AUX"})
 
 def morph_share_modals(doc: Doc) -> float:
-    words = _alpha_tokens(doc)
-    if not words:
+    preds = _predicates(doc)
+    if not preds:
         return 0.0
-    modal_count = sum(1 for t in words if t.tag_ == "MD")
-    return round(modal_count / len(words), 3)
+    modal_pred = sum(1 for t in preds if t.tag_ == "MD")
+    return modal_pred / len(preds)
+
+def _predicates(doc: Doc):
+    return [t for t in doc if t.pos_ in {"VERB","AUX"}]
+
+def _has_aux_link(v, lemmas=None, tags=None, deps=("aux","auxpass")) -> bool:
+    lemmas = set(lemmas or [])
+    tags = set(tags or [])
+    for n in list(v.children) + list(v.ancestors):
+        if n.dep_ in deps or n.pos_ == "AUX":
+            if (not lemmas or n.lemma_ in lemmas) and (not tags or n.tag_ in tags):
+                return True
+    return False
 
 def morph_tense_past_share(doc: Doc) -> float:
-    words = _alpha_tokens(doc)
-    if not words:
+    preds = _predicates(doc)
+    if not preds:
         return 0.0
     past_count = 0
-    for t in words:
+    for t in preds:
         if t.pos_ in {"VERB", "AUX"} and "Past" in t.morph.get("Tense"):
             past_count += 1
-    return round(past_count / len(words), 3)
+    return past_count / len(preds)
 
 def morph_tense_present_share(doc: Doc) -> float:
-    words = _alpha_tokens(doc)
-    if not words:
+    preds = _predicates(doc)
+    if not preds:
         return 0.0
     pres_count = 0
-    for t in words:
+    for t in preds:
         if t.pos_ in {"VERB", "AUX"} and "Pres" in t.morph.get("Tense"):
             pres_count += 1
-    return round(pres_count / len(words), 3)
+    return pres_count / len(preds)
 
 def morph_share_perfect(doc: Doc) -> float:
-    words = _alpha_tokens(doc)
-    if not words:
+    preds = _predicates(doc)
+    if not preds:
         return 0.0
     perfect_count = 0
-    for v in _verb_heads(doc):
-        auxs = _aux_children(v)
-        has_have = any(a.lemma_ == "have" for a in auxs)
-        has_be = any(a.lemma_ == "be" for a in auxs)
+    for v in (t for t in doc if t.pos_ == "VERB"):
+        has_have = _has_aux_link(v, lemmas={"have"})
+        has_be = _has_aux_link(v, lemmas={"be"})
         is_vbn = (v.tag_ == "VBN")
         is_perfect_prog = has_have and has_be and (v.tag_ == "VBG")
         if has_have and is_vbn and not is_perfect_prog:
             perfect_count += 1
-    return round(perfect_count / len(words), 3)
+    return perfect_count / len(preds)
 
 def morph_share_progressive(doc: Doc) -> float:
-    words = _alpha_tokens(doc)
-    if not words:
+    preds = _predicates(doc)
+    if not preds:
         return 0.0
     cnt = 0
-    for v in _verb_heads(doc):
-        auxs = _aux_children(v)
-        has_be = any(a.lemma_ == "be" for a in auxs)
-        has_have = any(a.lemma_ == "have" for a in auxs)
-        if has_be and (v.tag_ == "VBG") and not has_have:
+    for v in (t for t in doc if t.pos_ == "VERB"):
+        has_be = _has_aux_link(v, lemmas={"be"})
+        has_have = _has_aux_link(v, lemmas={"have"})
+        if has_be and v.tag_ == "VBG" and not has_have:
             cnt += 1
-    return round(cnt / len(words), 3)
+    return cnt / len(preds)
 
 def morph_share_perfect_progressive(doc: Doc) -> float:
-    words = _alpha_tokens(doc)
-    if not words:
+    preds = _predicates(doc)
+    if not preds:
         return 0.0
     cnt = 0
-    for v in _verb_heads(doc):
-        auxs = _aux_children(v)
-        has_have = any(a.lemma_ == "have" for a in auxs)
-        has_be = any(a.lemma_ == "be" for a in auxs)
+    for v in (t for t in doc if t.pos_ == "VERB"):
+        has_have = _has_aux_link(v, lemmas={"have"})
+        has_be = _has_aux_link(v, lemmas={"be"})
         if has_have and has_be and (v.tag_ == "VBG"):
             cnt += 1
-    return round(cnt / len(words), 3)
+    return cnt / len(preds)
 
 def morph_share_future(doc: Doc) -> float:
-    words = _alpha_tokens(doc)
-    if not words:
+    preds = _predicates(doc)
+    if not preds:
         return 0.0
     cnt = 0
-    for v in _verb_heads(doc):
-        auxs = _aux_children(v)
-        has_modal_future = any((a.tag_ == "MD" and a.lemma_ in {"will", "shall", "wo"}) for a in auxs)
-        if has_modal_future:
+    for v in (t for t in doc if t.pos_ == "VERB"):
+        modal_future = _has_aux_link(v, lemmas={"will","shall","wo"}, tags={"MD"})
+        going_to = any(tok.lemma_ == "go" and tok.tag_ == "VBG" for tok in [v]) and _has_aux_link(v, lemmas={"be"})
+        if modal_future or going_to:
             cnt += 1
-    return round(cnt / len(words), 3)
+    return cnt / len(preds)
 
 def morph_content_function_ratio(doc: Doc) -> float:
     words = _alpha_tokens(doc)
@@ -132,12 +141,15 @@ def morph_content_function_ratio(doc: Doc) -> float:
     content = sum(1 for t in words if t.pos_ in CONTENT_POS)
     function = sum(1 for t in words if t.pos_ in FUNCTION_POS)
     if function == 0:
-        return round(float(content), 3)
-    return round(content / function, 3)
+        return float(content)
+    return content / function
 
+@lru_cache(maxsize=1)
 def load_affixes():
     prefixes = []
     suffixes = []
+    if not AFFIX_FILE.exists():
+        return prefixes, suffixes
     with open(AFFIX_FILE, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -152,7 +164,7 @@ def load_affixes():
 PREFIXES, SUFFIXES = load_affixes()
 
 def _count_morphemes(token) -> int:
-    lemma = token.lemma_.lower()
+    lemma = (token.lemma_ or token.text).lower()
     morph_count = 1
 
     for pref in PREFIXES:
@@ -170,10 +182,11 @@ def _count_morphemes(token) -> int:
     if morph.get("Tense") or morph.get("VerbForm") or morph.get("Aspect"):
         morph_count += 1
 
-    if "Number=Plur" in morph:
+    if "Plur" in morph.get("Number"):
         morph_count += 1
 
-    if "Degree=Cmp" in morph or "Degree=Sup" in morph:
+    deg = morph.get("Degree")
+    if "Cmp" in deg or "Sup" in deg:
         morph_count += 1
 
     return morph_count
@@ -183,7 +196,7 @@ def morph_avg_morphemes_per_word(doc: Doc) -> float:
     if not words:
         return 0.0
     counts = [_count_morphemes(t) for t in words]
-    return round(sum(counts) / len(counts), 3)
+    return sum(counts) / len(counts)
 
 def extract_morph(doc: Doc) -> Dict[str, float]:
     metrics = {

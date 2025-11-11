@@ -1,7 +1,16 @@
 from typing import Dict, Set, Optional
 from functools import lru_cache
-import textstat
 from pathlib import Path
+
+try:
+    import textstat
+except Exception:
+    textstat = None
+
+try:
+    from wordfreq import zipf_frequency
+except Exception:
+    zipf_frequency = None
 
 def _alpha_tokens(doc):
     return [t for t in doc if t.is_alpha]
@@ -42,7 +51,7 @@ def share_stopwords(doc) -> float:
     return stop_count / len(words)
 
 def share_num_symbol(doc) -> float:
-    tokens = [t for t in doc]
+    tokens = [t for t in doc if not t.is_space]
     if not tokens:
         return 0.0
     num_or_symbol = sum(1 for t in tokens if (t.pos_ == "NUM") or (not t.is_alpha and not t.is_space))
@@ -52,8 +61,8 @@ def share_oov(doc) -> float:
     words = _alpha_tokens(doc)
     if not words:
         return 0.0
-    oov_count = sum(1 for t in words if t.is_oov)
-    return oov_count / len(words)
+    rare = sum(1 for t in words if zipf_frequency(t.lemma_.lower(), "en") < 2.5)
+    return rare / len(words)
 
 def share_awl(doc, awl_path: Optional[str] = None) -> float:
     words = _alpha_tokens(doc)
