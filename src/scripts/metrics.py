@@ -19,7 +19,7 @@ def read_text(text: Optional[str], file: Optional[str]) -> str:
 
 def main():
     ap = argparse.ArgumentParser(description="Compute metrics; print JSON or save to DB.")
-    ap.add_argument("--text", type=str, help="Raw text to analyze.")
+    ap.add_argument("--text", nargs="+", type=str, help="One or more texts (use quotes)")
     ap.add_argument("--model", type=str, default="en_core_web_md", help="Spacy model to use.")
     ap.add_argument("--file", type=str, help="Path to a UTF-8 .txt file.")
 
@@ -28,9 +28,14 @@ def main():
     ap.add_argument("--level-id", type=int, help="Level ID (FK to levels.id).")
 
     args = ap.parse_args()
+    texts = args.text
 
-    raw = read_text(args.text, args.file)
-    metrics = collect_all_features(raw, spacy_model=args.model)
+    metrics = []
+    for i, text in enumerate(texts, start=1):
+        raw = read_text(text, args.file)
+        print(f"/\n Processing text #{i}: {text[:50]} ...")
+        result = collect_all_features(raw, spacy_model=args.model)
+        metrics.append(result)
 
     if not args.save_db:
         print(json.dumps(metrics, indent=2, ensure_ascii=False))
@@ -45,13 +50,14 @@ def main():
     db = SessionLocal()
 
     try:
-        row = insert_metrics(
-            db,
-            metrics,
-            level_name=args.level,
-            level_id=args.level_id,
-        )
-        print(f"Saved metrics id={row.id} level={args.level or args.level_id}")
+        for metric in metrics:
+            row = insert_metrics(
+                db,
+                metric,
+                level_name=args.level,
+                level_id=args.level_id,
+            )
+            print(f"Saved metrics id={row.id} level={args.level or args.level_id}")
     finally:
         db.close()
 
