@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 import joblib
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.textnorm import normalize_text
 from src.core.spacy_nlp import load_spacy_nlp
@@ -15,6 +16,14 @@ from src.features.readability import extract_readability
 from src.config.model_config import FEATURE_ORDER, ID2LEVEL
 
 app = FastAPI(title="Text Complexity API", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 nlp = None
 clf = None
