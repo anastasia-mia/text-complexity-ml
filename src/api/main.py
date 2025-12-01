@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import joblib
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -69,11 +69,8 @@ def load_resources():
 
     clf = clf_loaded
 
-
-
-@app.post("/predict", response_model=PredictionResponse)
-def predict_level(payload: TextRequest):
-    metrics = compute_all_metrics(payload.text)
+def predict_from_text(text: str) -> PredictionResponse:
+    metrics = compute_all_metrics(text)
     x = [metrics[name] for name in FEATURE_ORDER]
 
     pred_id = int(clf.predict([x])[0])
@@ -90,10 +87,39 @@ def predict_level(payload: TextRequest):
 
     return PredictionResponse(
         level_id=pred_id,
-        level_label=ID2LEVEL.get(pred_id, "unknown"),
+        level_label=level,
         probabilities=probabilities,
-        metrics=metrics
+        metrics=metrics,
     )
+
+@app.post("/predict", response_model=PredictionResponse)
+async def predict_level(
+        text: Optional[str] = Form(None),
+        file: Optional[UploadFile] = File(None),
+):
+    if not text and not file:
+        raise HTTPException(status_code=400, detail="Додайте текст або файл!")
+
+    if text and text.strip():
+        return predict_from_text(text)
+
+    if file is None:
+        raise HTTPException(status_code=400, detail="Документ пустий! Спробуйте ще раз")
+
+    if file.content_type not in ("text/plain", "application/octet-stream"):
+        raise HTTPException(status_code=400, detail="Підтримуються лише файли з розширенням .txt")
+
+    raw_bytes = await file.read()
+
+    try:
+        file_text = raw_bytes.decode("utf-8", errors="ignore")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Неможливо декодувати текст")
+
+    if not file_text.strip():
+        raise HTTPException(status_code=400, detail="Файл не містить зрозумілий текст")
+
+    return predict_from_text(file_text)
 
 
 
