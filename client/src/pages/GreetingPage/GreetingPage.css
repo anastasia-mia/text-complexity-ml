@@ -98,7 +98,7 @@
 
 .orb-1, .orb-7{
     color: rgba(196, 191, 73,0.3);
-    -webkit-text-stroke: 4px rgb(196, 191, 73, 51);
+    -webkit-text-stroke: 4px rgb(196, 191, 73);
 }
 
 .orb-2, .orb-8{
@@ -123,7 +123,7 @@
 
 .orb-6, .orb-12{
     color: rgba(173, 15, 186, 0.3);
-    -webkit-text-stroke: 4px rgb(173, 15, 186, 227);
+    -webkit-text-stroke: 4px rgb(173, 15, 186);
 }
 
 .greeting-page h1{

@@ -1,0 +1,16 @@
+header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    background-color: rgb(74, 117, 133);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+}
+
+header p{
+    font-size: 24px;
+}

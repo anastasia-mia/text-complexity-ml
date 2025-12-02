@@ -1,0 +1,19 @@
+main{
+    margin-top: 60px;
+}
+
+.analysis-page {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.analysis-input {
+    width: 60%;
+}
+
+.analysis-result{
+    width: 40%;
+}
+
+

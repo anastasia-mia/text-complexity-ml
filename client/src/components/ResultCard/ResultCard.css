@@ -1,0 +1,75 @@
+.result-container{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.result{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+}
+
+.result-container-analyzed{
+    height: 45vh;
+}
+
+.result-label{
+    font-size: 160px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: -35px;
+}
+
+.result span{
+    font-size: 36px;
+}
+
+.result-label-1{
+    color: rgb(196, 191, 73)
+}
+
+.result-label-2{
+    color: rgb(245, 161, 51)
+}
+
+.result-label-3{
+    color: rgb(87, 153, 121)
+}
+
+.result-label-4{
+    color: rgb(48, 122, 47)
+}
+
+.result-label-5{
+    color: rgb(174, 142, 222)
+}
+
+.result-label-6{
+    color: rgb(173, 15, 186)
+}
+
+.no-result{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 15px;
+}
+
+.no-result p{
+    font-size: 18px;
+    font-weight: 600;
+}
