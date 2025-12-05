@@ -2,6 +2,7 @@ import './App.css'
 import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
 import {GreetingPage} from "./pages/GreetingPage/GreetingPage.tsx";
 import {AnalysisPage} from "./pages/AnalysisPage/AnalysisPage.tsx";
+import {StatisticsPage} from "./pages/StatisticsPage/StatisticsPage.tsx";
 
 function App() {
 
@@ -13,6 +14,7 @@ function App() {
             <Routes>
                 <Route path="/"  element={<GreetingPage />}/>
                 <Route path="/analysis" element={<AnalysisPage />}/>
+                <Route path="/statistics" element={<StatisticsPage />}/>
             </Routes>
         </Router>
     </>

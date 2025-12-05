@@ -65,7 +65,7 @@ export const usePredictionStore = create<PredictionState>((set) => ({
         try {
             set({ loading: true, error: null });
 
-            const res = await fetch("http://localhost:8000/predict", {
+            const res = await fetch("http://localhost:8000/api/predict", {
                 method: "POST",
                 body: formData,
             });

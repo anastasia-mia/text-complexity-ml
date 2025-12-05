@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, Float, String, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base, relationship
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -64,3 +65,13 @@ class Metrics(Base):
     read_dale_chall = Column(Float)
 
     level = relationship("Level", back_populates="metrics")
+
+class AnalysisLog(Base):
+    __tablename__ = "analysis_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    level_id = Column(Integer, nullable=False)
+    level_label=Column(String(4), nullable=False)
+    text_length = Column(Integer, nullable=False)
+    source_type = Column(String, nullable=False)

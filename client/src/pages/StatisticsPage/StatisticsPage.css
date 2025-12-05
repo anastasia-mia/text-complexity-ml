@@ -1,0 +1,47 @@
+.stat{
+    margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 30px;
+
+}
+
+.stat p{
+    font-size: 24px;
+}
+
+.stat-cards{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+}
+
+.level-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    padding: 30px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    gap: 30px;
+}
+
+.level-label{
+    font-size: 170px;
+}
+
+.level-details{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 30%;
+    gap: 20px;
+}
+
+.level-details span{
+    font-size: 22px;
+}

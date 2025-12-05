@@ -95,10 +95,10 @@ p {
 }
 
 .container {
-    max-width: 1440px;
+    width: 1420px;
     margin: 0 auto;
-    padding-left: 80px;
-    padding-right: 80px;
+    padding-left: 100px;
+    padding-right: 100px;
     height: 100%;
 }
 
