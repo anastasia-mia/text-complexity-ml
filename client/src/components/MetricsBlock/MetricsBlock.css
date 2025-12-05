@@ -16,14 +16,44 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 .metric-label{
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 5px;
+    padding: 5px;
 }
 
 .metric-value{
     font-size: 16px;
+}
+
+.metric-svg-i{
+    width: 15px;
+    height: 15px;
+    margin: 5px;
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    cursor: pointer;
+}
+
+.metric-tooltip-text{
+    visibility: hidden;
+    position: absolute;
+    font-size: 12px;
+    background-color: rgb(232, 232, 232);
+    top: 13%;
+    right: 0;
+    padding: 5px;
+    border-radius: 5px;
+    width: 195px;
+    font-weight: 500;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.metric-svg-i:hover + .metric-tooltip-text{
+    visibility: visible;
 }
